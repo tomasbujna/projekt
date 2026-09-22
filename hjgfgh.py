@@ -1,0 +1,18 @@
+sklad = {"jablko": (0.5, "ovocie", 100),
+         "banan": (0.3, "ovocie", 50),
+         "mlieko": (5, "mliecny vyrobok", 20),
+}
+
+kosik = []
+
+cena = 0
+
+while True:
+    polozka = input("vloz do kosika: ")
+    if polozka in sklad:
+        kosik.append(polozka)
+        cena += sklad[polozka][0]    
+    else:
+        print(f"{polozka} nie je v sklade.")
+    
+    
