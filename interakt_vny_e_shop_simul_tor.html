@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderný e-shop simulátor</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome pre ikony -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid fa-store text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 tracking-tight">Virtuálny Obchod</h1>
+                    <p class="text-xs text-slate-500">Inšpirované Python simulátorom</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 bg-indigo-50 px-4 py-2 rounded-full border border-indigo-100 text-indigo-700 font-medium text-sm">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span id="headerCartCount">0</span> položiek v košíku
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Sekcia: Dostupný tovar (Sklad) -->
+        <section class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-boxes-stacked text-indigo-600"></i> Dostupné produkty
+                    </h2>
+                    <span class="text-xs font-semibold uppercase tracking-wider bg-slate-100 text-slate-600 px-3 py-1 rounded-full">Sklad</span>
+                </div>
+                
+                <div id="skladGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Položky skladu sa vygenerujú cez JavaScript -->
+                </div>
+            </div>
+
+            <!-- Informačný panel o kupónoch -->
+            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl p-6 shadow-md">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="font-bold text-lg mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-ticket"></i> Dostupné zľavové kupóny
+                        </h3>
+                        <p class="text-indigo-100 text-sm mb-4">Uplatni si zľavu v košíku pred dokončením nákupu.</p>
+                        <div class="flex flex-wrap gap-3">
+                            <span class="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-lg text-sm font-semibold border border-white/30">
+                                ZLAVA10 <span class="text-xs font-normal opacity-90">(10% zľava)</span>
+                            </span>
+                            <span class="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-lg text-sm font-semibold border border-white/30">
+                                ZLAVA20 <span class="text-xs font-normal opacity-90">(20% zľava)</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sekcia: Nákupný košík -->
+        <section class="lg:col-span-1">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 sticky top-24 space-y-6">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-basket-shopping text-indigo-600"></i> Nákupný košík
+                    </h2>
+                    <button onclick="vyprazdnitKoik()" class="text-xs text-rose-500 hover:text-rose-700 font-medium transition-colors">
+                        Vyprázdniť
+                    </button>
+                </div>
+
+                <!-- Zoznam položiek v košíku -->
+                <div id="kosikList" class="space-y-3 max-h-60 overflow-y-auto pr-1">
+                    <div class="text-center py-8 text-slate-400 text-sm">
+                        Košík je zatiaľ prázdny.
+                    </div>
+                </div>
+
+                <!-- Sekcija pre kupóny -->
+                <div class="border-t border-slate-100 pt-4 space-y-3">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Zľavový kupón</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="kuponInput" placeholder="Zadaj kód (napr. ZLAVA10)" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase">
+                        <button onclick="aplikujKupon()" class="bg-slate-900 text-white text-sm px-4 py-2.5 rounded-xl hover:bg-slate-800 transition-colors font-medium">Použiť</button>
+                    </div>
+                    <div id="kuponSprava" class="text-xs font-medium"></div>
+                </div>
+
+                <!-- Výpočet ceny -->
+                <div class="border-t border-slate-100 pt-4 space-y-2">
+                    <div class="flex justify-between text-sm text-slate-500">
+                        <span>Suma pred zľavou:</span>
+                        <span id="sumaPredZlavou">0.00 €</span>
+                    </div>
+                    <div id="zlavaRiadok" class="flex justify-between text-sm text-emerald-600 font-medium hidden">
+                        <span>Aplikovaná zľava:</span>
+                        <span id="sumaZlavy">-0.00 €</span>
+                    </div>
+                    <div class="flex justify-between text-base font-bold text-slate-900 pt-2 border-t border-dashed border-slate-200">
+                        <span>Spolu k úhrade:</span>
+                        <span id="celkovaSuma" class="text-indigo-600 text-lg">0.00 €</span>
+                    </div>
+                </div>
+
+                <!-- Tlačidlo Dokončiť -->
+                <button onclick="dokoncitNakup()" id="dokoncitBtn" class="w-full bg-indigo-600 text-white font-medium py-3 rounded-xl shadow-md hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Dokončiť nákup
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modálne okno pre potvrdenie nákupu -->
+    <div id="modalOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div id="modalContent" class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform duration-300 space-y-4 text-center">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900">Ďakujem za nákup!</h3>
+            <p id="modalText" class="text-sm text-slate-600">Tvoj nákup bol úspešne spracovaný.</p>
+            <button onclick="zatvoritModal()" class="w-full bg-slate-900 text-white font-medium py-2.5 rounded-xl hover:bg-slate-800 transition-colors">
+                Zavrieť
+            </button>
+        </div>
+    </div>
+
+    <!-- Oznámenie (Toast) -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-sm flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastText">Položka bola pridaná</span>
+    </div>
+
+    <script>
+        // Stav skladu a košíka priamo podľa Python predlohy
+        let sklad = {
+            "jablko": { "cena": 1.50, "počet": 20, "ikona": "fa-apple-whole", "farba": "bg-emerald-50 text-emerald-600" },
+            "chleba": { "cena": 1.20, "počet": 10, "ikona": "fa-bread-slice", "farba": "bg-amber-50 text-amber-600" },
+            "mlieko": { "cena": 0.95, "počet": 15, "ikona": "fa-cow", "farba": "bg-blue-50 text-blue-600" }
+        };
+
+        let kosik = [];
+        let aktivnyKupon = null; // 'ZLAVA10', 'ZLAVA20' alebo null
+
+        // Inicializácia rozhrania
+        function renderSklad() {
+            const grid = document.getElementById('skladGrid');
+            grid.innerHTML = '';
+
+            for (const [nazov, info] of Object.entries(sklad)) {
+                const velkeMeno = nazov.charAt(0).toUpperCase() + nazov.slice(1);
+                const isDostupny = info.počet > 0;
+
+                const card = document.createElement('div');
+                card.className = `border border-slate-100 rounded-xl p-5 flex flex-col justify-between transition-all bg-white hover:shadow-md`;
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl ${info.farba}">
+                                <i class="fa-solid ${info.ikona}"></i>
+                            </div>
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${isDostupny ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">
+                                ${isDostupny ? `${info.počet} ks skladom` : 'Vypredané'}
+                            </span>
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-base mb-1">${velkeMeno}</h3>
+                        <p class="text-indigo-600 font-bold text-lg mb-4">${info.cena.toFixed(2)} €</p>
+                    </div>
+                    <button onclick="pridatDoKosika('${nazov}')" 
+                        class="w-full py-2.5 px-4 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2 ${isDostupny ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}"
+                        ${!isDostupny ? 'disabled' : ''}>
+                        <i class="fa-solid fa-cart-plus"></i> Pridať do košíka
+                    </button>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        // Pridanie tovaru do košíka (obdoba logiky v Pythone)
+        function pridatDoKosika(nazov) {
+            if (sklad[nazov]["počet"] > 0) {
+                kosik.push({
+                    id: Date.now() + Math.random(),
+                    nazov: nazov,
+                    cena: sklad[nazov]["cena"]
+                });
+                sklad[nazov]["počet"] -= 1;
+                
+                renderSklad();
+                renderKosik();
+                ukazToast(`'${nazov.charAt(0).toUpperCase() + nazov.slice(1)}' bol pridaný do košíka.`);
+            }
+        }
+
+        // Odstránenie položky z košíka (vracanie do skladu)
+        function odobratZKosika(index) {
+            const polozka = kosik[index];
+            sklad[polozka.nazov]["počet"] += 1;
+            kosik.splice(index, 1);
+            
+            renderSklad();
+            renderKosik();
+        }
+
+        // Vyprázdnenie celého košíka
+        function vyprazdnitKoik() {
+            kosik.forEach(polozka => {
+                sklad[polozka.nazov]["počet"] += 1;
+            });
+            kosik = [];
+            aktivnyKupon = null;
+            document.getElementById('kuponInput').value = '';
+            document.getElementById('kuponSprava').innerHTML = '';
+            renderSklad();
+            renderKosik();
+        }
+
+        // Vykreslenie košíka
+        function renderKosik() {
+            const listContainer = document.getElementById('kosikList');
+            const headerCount = document.getElementById('headerCartCount');
+            const dokoncitBtn = document.getElementById('dokoncitBtn');
+            
+            headerCount.innerText = kosik.length;
+            dokoncitBtn.disabled = kosik.length === 0;
+
+            if (kosik.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-sm">
+                        Košík je zatiaľ prázdny.
+                    </div>
+                `;
+                vypocitatCeny();
+                return;
+            }
+
+            listContainer.innerHTML = '';
+            kosik.forEach((polozka, index) => {
+                const velkeMeno = polozka.nazov.charAt(0).toUpperCase() + polozka.nazov.slice(1);
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100 text-sm';
+                itemDiv.innerHTML = `
+                    <div>
+                        <span class="font-semibold text-slate-800">${velkeMeno}</span>
+                        <div class="text-xs text-slate-500">${polozka.cena.toFixed(2)} €</div>
+                    </div>
+                    <button onclick="odobratZKosika(${index})" class="text-slate-400 hover:text-rose-600 transition-colors p-1.5" title="Odstrániť">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                `;
+                listContainer.appendChild(itemDiv);
+            });
+
+            vypocitatCeny();
+        }
+
+        // Aplikovanie zľavového kupónu (funkcia aplikujZlavu)
+        function aplikujKupon() {
+            const kuponInput = document.getElementById('kuponInput').value.trim().toUpperCase();
+            const spravaDiv = document.getElementById('kuponSprava');
+
+            if (kuponInput === "ZLAVA10") {
+                aktivnyKupon = "ZLAVA10";
+                spravaDiv.className = "text-xs font-medium text-emerald-600";
+                spravaDiv.innerText = "✓ Kupón aplikovaný: 10% zľava!";
+            } else if (kuponInput === "ZLAVA20") {
+                aktivnyKupon = "ZLAVA20";
+                spravaDiv.className = "text-xs font-medium text-emerald-600";
+                spravaDiv.innerText = "✓ Kupón aplikovaný: 20% zľava!";
+            } else if (kuponInput === "") {
+                aktivnyKupon = null;
+                spravaDiv.innerText = "";
+            } else {
+                aktivnyKupon = null;
+                spravaDiv.className = "text-xs font-medium text-rose-500";
+                spravaDiv.innerText = "× Neplatný kupón, pokračuje sa bez zľavy.";
+            }
+            vypocitatCeny();
+        }
+
+        // Výpočet celkových súm a zliav
+        function vypocitatCeny() {
+            let sumaPred = 0;
+            kosik.forEach(p => sumaPred += p.cena);
+
+            let konecnaSuma = sumaPred;
+            const zlavaRiadok = document.getElementById('zlavaRiadok');
+            const sumaZlavyEl = document.getElementById('sumaZlavy');
+
+            if (aktivnyKupon === "ZLAVA10") {
+                konecnaSuma = sumaPred * 0.9;
+                zlavovaSuma = sumaPred * 0.1;
+                zlavaRiadok.classList.remove('hidden');
+                sumaZlavyEl.innerText = `-${zlavovaSuma.toFixed(2)} €`;
+            } else if (aktivnyKupon === "ZLAVA20") {
+                konecnaSuma = sumaPred * 0.8;
+                zlavovaSuma = sumaPred * 0.2;
+                zlavaRiadok.classList.remove('hidden');
+                sumaZlavyEl.innerText = `-${zlavovaSuma.toFixed(2)} €`;
+            } else {
+                zlavaRiadok.classList.add('hidden');
+            }
+
+            document.getElementById('sumaPredZlavou').innerText = `${sumaPred.toFixed(2)} €`;
+            document.getElementById('celkovaSuma').innerText = `${konecnaSuma.toFixed(2)} €`;
+        }
+
+        // Dokončenie nákupu
+        function dokoncitNakup() {
+            let sumaPred = 0;
+            kosik.forEach(p => sumaPred += p.cena);
+            let konecnaSuma = sumaPred;
+            if (aktivnyKupon === "ZLAVA10") konecnaSuma = sumaPred * 0.9;
+            if (aktivnyKupon === "ZLAVA20") konecnaSuma = sumaPred * 0.8;
+
+            document.getElementById('modalText').innerText = `Tvoj nákup v hodnote ${konecnaSuma.toFixed(2)} € bol úspešne spracovaný.`;
+            
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+
+            // Vyčistenie košíka po nákupe
+            kosik = [];
+            aktivnyKupon = null;
+            document.getElementById('kuponInput').value = '';
+            document.getElementById('kuponSprava').innerText = '';
+            renderKosik();
+        }
+
+        function zatvoritModal() {
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+            overlay.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+
+        // Zobrazenie toast notifikácie
+        function ukazToast(text) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastText').innerText = text;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Spustenie pri načítaní stránky
+        window.onload = function() {
+            renderSklad();
+            renderKosik();
+        }
+    </script>
+</body>
+</html>
