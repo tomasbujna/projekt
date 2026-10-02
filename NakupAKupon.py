@@ -1,3 +1,4 @@
+sklad = {
     "jablko": {"cena": 1.50, "počet": 20},
     "chleba": {"cena": 1.20, "počet": 10},
     "mlieko": {"cena": 0.95, "počet": 15}
